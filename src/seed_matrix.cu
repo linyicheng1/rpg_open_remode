@@ -99,20 +99,24 @@ bool rmd::SeedMatrix::setReferenceImage(
     const float &max_depth)
 {
   // Upload reference image to device memory
+  // 上传数据到GPU中
   ref_img_.setDevData(host_ref_img_align_row_maj);
   // Set scene parameters
+  // 设置场景的参数 3sigma范围内
   dev_data_.scene.min_depth    = min_depth;
   dev_data_.scene.max_depth    = max_depth;
   dev_data_.scene.avg_depth    = (min_depth+max_depth)/2.0f;
   dev_data_.scene.depth_range  = max_depth - min_depth;
   dev_data_.scene.sigma_sq_max = dev_data_.scene.depth_range * dev_data_.scene.depth_range / 36.0f;
   // Algorithm parameters
+  // 算法参数，inlier>0.7认为收敛了 outlier>0.05认为这应该被丢弃
   dev_data_.eta_inlier  = 0.7f;
   dev_data_.eta_outlier = 0.05f;
   dev_data_.epsilon     = dev_data_.scene.depth_range / 1000.0f;
   // Copy data to device memory
+  // 复制数据到GPU
   dev_data_.setDevData();
-
+  // 世界系到参考帧
   T_world_ref_ = T_curr_world.inv();
 
   rmd::bindTexture(ref_img_tex, ref_img_);
@@ -136,12 +140,15 @@ bool rmd::SeedMatrix::update(
     float *host_curr_img_align_row_maj,
     const SE3<float> &T_curr_world)
 {
+  // 计算当前帧到参考帧的坐标变换关系
   const rmd::SE3<float> T_curr_ref = T_curr_world * T_world_ref_;
+  // 参考帧的方向
   dist_from_ref_ = norm(T_curr_ref.getTranslation());
 
   // Upload current image to device memory
   curr_img_.setDevData(host_curr_img_align_row_maj);
   // Bind texture memory for the current image
+  // 绑定图像到内存
   rmd::bindTexture(curr_img_tex, curr_img_);
 
   // ... and model parameters

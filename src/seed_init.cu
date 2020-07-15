@@ -24,12 +24,18 @@
 namespace rmd
 {
 
+  /**
+   * @brief 种子初始化GPU实现函数
+   * @param dev_ptr 参数指针 
+   * 
+   * */
 __global__
 void seedInitKernel(mvs::DeviceData *dev_ptr)
 {
+  // 传入内存大小
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int y = blockIdx.y * blockDim.y + threadIdx.y;
-
+  // 比设定值大则返回
   if(x >= dev_ptr->width || y >= dev_ptr->height)
     return;
 
@@ -39,7 +45,7 @@ void seedInitKernel(mvs::DeviceData *dev_ptr)
   for(int patch_y=0; patch_y<RMD_CORR_PATCH_SIDE; ++patch_y)
   {
     for(int patch_x=0; patch_x<RMD_CORR_PATCH_SIDE; ++patch_x)
-    {
+    {//遍历所有点
       const float templ = tex2D(
             ref_img_tex,
             (float)(x+RMD_CORR_PATCH_OFFSET+patch_x)+0.5f,

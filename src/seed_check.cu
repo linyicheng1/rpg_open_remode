@@ -33,7 +33,7 @@ void seedCheckKernel(mvs::DeviceData *dev_ptr)
 
   if(x >= dev_ptr->width || y >= dev_ptr->height)
     return;
-
+  //如果在图像的边界
   if(x > dev_ptr->width-RMD_CORR_PATCH_SIDE-1 || y > dev_ptr->height-RMD_CORR_PATCH_SIDE-1 ||
      x < RMD_CORR_PATCH_SIDE || y < RMD_CORR_PATCH_SIDE)
   {
@@ -45,6 +45,7 @@ void seedCheckKernel(mvs::DeviceData *dev_ptr)
   const float yy = y+0.5f;
 
   // Retrieve current estimations of parameters
+  // 获取当前的估计参数
   const float mu = tex2D(mu_tex, xx, yy);
   const float sigma_sq = tex2D(sigma_tex, xx, yy);
   const float a = tex2D(a_tex, xx, yy);
@@ -53,11 +54,11 @@ void seedCheckKernel(mvs::DeviceData *dev_ptr)
   // if E(inlier_ratio) > eta_inlier && sigma_sq < epsilon
   if( ((a / (a + b)) > dev_ptr->eta_inlier)
       && (sigma_sq < dev_ptr->epsilon) )
-  { // The seed converged
+  { // The seed converged 收敛
     dev_ptr->convergence->atXY(x, y) = ConvergenceStates::CONVERGED;
   }
   else if((a-1) / (a + b - 2) < dev_ptr->eta_outlier)
-  { // The seed failed to converge
+  { // The seed failed to converge 发散
     dev_ptr->convergence->atXY(x, y) = ConvergenceStates::DIVERGED;
   }
   else

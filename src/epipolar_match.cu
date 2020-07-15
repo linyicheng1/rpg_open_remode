@@ -47,7 +47,7 @@ void seedEpipolarMatchKernel(
 
   const float xx = x+0.5f;
   const float yy = y+0.5f;
-
+  // 在边缘、收敛及发散点均不处理
   const int seed_state = tex2D(convergence_tex, xx, yy);
   if( (ConvergenceStates::BORDER    == seed_state) ||
       (ConvergenceStates::CONVERGED == seed_state) ||
@@ -57,25 +57,31 @@ void seedEpipolarMatchKernel(
   }
 
   // Retrieve current estimations of depth
+  // 获取当前 均值及方差sigma，mu为逆深度
   const float mu = tex2D(mu_tex, xx, yy);
   const float sigma = sqrtf(tex2D(sigma_tex, xx, yy));
-
+  
   const float2 px_ref = make_float2((float)x, (float)y);
   const float3 f_ref = normalize(dev_ptr->cam.cam2world(px_ref));
+  // 均值点
   const float2 px_mean_curr =
       dev_ptr->cam.world2cam( T_curr_ref * (f_ref * mu) );
-
+  // min
   const float2 px_min_curr =
       dev_ptr->cam.world2cam( T_curr_ref * (f_ref * fmaxf( mu - 3.0f*sigma, 0.01f)) );
+  // max
   const float2 px_max_curr =
       dev_ptr->cam.world2cam( T_curr_ref * (f_ref * ( mu + (3.0f*sigma) ) ) );
-
+  // 极线
   const float2 epi_line = px_max_curr - px_min_curr;
+  // 极线方向
   const float2 epi_dir  = normalize(epi_line);
+  // 避免极线太长了
   const float  half_length = 0.5f * fminf(norm(epi_line), RMD_MAX_EXTENT_EPIPOLAR_SEARCH);
   float2 px_curr, best_px_curr;
 
   // Retrieve template statistics for NCC matching;
+  // 初始化时得到的NCC
   const float sum_templ = tex2D(sum_templ_tex, xx, yy);
   const float const_templ_denom = tex2D(const_templ_denom_tex, xx, yy);
 
@@ -117,23 +123,25 @@ void seedEpipolarMatchKernel(
         sum_img_templ += img*templ;
       }
     }
+    // 计算ncc，根据公式
     const float ncc_numerator = RMD_CORR_PATCH_AREA*sum_img_templ - sum_img*sum_templ;
     const float ncc_denominator = (RMD_CORR_PATCH_AREA*sum_img_sq - sum_img*sum_img)*const_templ_denom;
 
     const float ncc = ncc_numerator * rsqrtf(ncc_denominator + FLT_MIN);
-
+    // 保存最佳NCC匹配数据
     if(ncc > best_ncc)
     {
       best_px_curr = px_curr;
       best_ncc = ncc;
     }
   }
+  // 必须要保证最佳匹配得分较高
   if(best_ncc < 0.5f)
-  {
+  {// 得分太低则认为没有匹配成功
     dev_ptr->convergence->atXY(x, y) = ConvergenceStates::NO_MATCH;
   }
   else
-  {
+  {// 匹配成功，复制更新状态
     dev_ptr->epipolar_matches->atXY(x, y) = best_px_curr;
     dev_ptr->convergence->atXY(x, y) = ConvergenceStates::UPDATE;
   }
