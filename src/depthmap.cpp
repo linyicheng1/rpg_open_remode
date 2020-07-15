@@ -60,46 +60,73 @@ void rmd::Depthmap::initUndistortionMap(
   is_distorted_ = true;
 }
 
+/**
+ * @brief 初始化时调用，设置当前帧为参考帧
+ * @param img_curr      当前帧图像数据
+ * @param T_curr_world  当前帧到世界的坐标变换关系
+ * @param min_depth     最小深度值
+ * @param max_depth     最大深度值
+ * 
+ * */
 bool rmd::Depthmap::setReferenceImage(
     const cv::Mat &img_curr,
     const rmd::SE3<float> &T_curr_world,
     const float &min_depth,
     const float &max_depth)
 {
+  // 根据min、max的 sigma 
   denoiser_->setLargeSigmaSq(max_depth-min_depth);
+  // 输入当前的图片
   inputImage(img_curr);
+  // 设置当前帧为参考帧？？目的应该是只初始化一次
   const bool ret = seeds_.setReferenceImage(reinterpret_cast<float*>(img_undistorted_32fc1_.data),
                                             T_curr_world,
                                             min_depth,
                                             max_depth);
 
   {
+    // 在括号内线程锁起作用
     std::lock_guard<std::mutex> lock(ref_img_mutex_);
+    // 复制参考帧图片
     img_undistorted_8uc1_.copyTo(ref_img_undistorted_8uc1_);
+    // 设置参考帧位姿
     T_world_ref_ = T_curr_world.inv();
   }
 
   return ret;
 }
 
+/**
+ * @brief 正常处理流程下更新深度滤波器
+ * @param img_curr      当前的图像数据
+ * @param T_curr_world  当前帧和世界坐标系的关系
+ * 
+ * */
 void rmd::Depthmap::update(
     const cv::Mat &img_curr,
     const rmd::SE3<float> &T_curr_world)
 {
+  // 读取当前图像数据/去除畸变
   inputImage(img_curr);
+  // 种子更新
   seeds_.update(
         reinterpret_cast<float*>(img_undistorted_32fc1_.data),
         T_curr_world);
 }
 
+/**
+ * @brief 输入一张新的图片
+ * @param img_8uyc1 图片数据
+ * 
+ * */
 void rmd::Depthmap::inputImage(const cv::Mat &img_8uc1)
 {
   if(is_distorted_)
-  {
+  {// 如果有畸变，则去除畸变
     cv::remap(img_8uc1, img_undistorted_8uc1_, undist_map1_, undist_map2_, CV_INTER_LINEAR);
   }
   else
-  {
+  {// 没有畸变的话直接复制
     img_undistorted_8uc1_ = img_8uc1;
   }
   img_undistorted_8uc1_.convertTo(img_undistorted_32fc1_, CV_32F, 1.0f/255.0f);

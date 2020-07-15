@@ -29,13 +29,15 @@
 
 #include "../test/dataset.h"
 
+// 运行数据集函数入口
 int main(int argc, char **argv)
 {
+  // 当前是否存在gpu
   if(!rmd::checkCudaDevice(argc, argv))
     return EXIT_FAILURE;
-
+  // 创建针孔相机模型
   rmd::PinholeCamera cam(481.2f, -480.0f, 319.5f, 239.5f);
-
+  // 前200帧数据
   rmd::test::Dataset dataset("first_200_frames_traj_over_table_input_sequence.txt");
   if(!dataset.loadPathFromEnv())
   {
@@ -57,16 +59,17 @@ int main(int argc, char **argv)
   // store the timings
   // update
   std::vector<double> update_time;
-
+  // 遍历所有的图片
   for(const auto data : dataset)
   {
     cv::Mat img;
+    // 根据文件中给定的文件名读取图像
     if(!dataset.readImage(img, data))
     {
       std::cerr << "ERROR: could not read image " << data.getImageFileName() << std::endl;
       continue;
     }
-
+    // 读取真实的深度信息
     cv::Mat depth_32FC1;
     if(!dataset.readDepthmap(depth_32FC1, data, img.cols, img.rows))
     {
@@ -75,17 +78,19 @@ int main(int argc, char **argv)
     }
     double min_depth, max_depth;
     cv::minMaxLoc(depth_32FC1, &min_depth, &max_depth);
-
+    // 读取当前位姿信息
     rmd::SE3<float> T_world_curr;
     dataset.readCameraPose(T_world_curr, data);
-
+    // 输出当前位置信息
     std::cout << "RUN EXPERIMENT: inputting image " << data.getImageFileName() <<  std::endl;
     std::cout << "T_world_curr:" << std::endl;
     std::cout << T_world_curr << std::endl;
 
     // process
+    // 数据进行处理
     if(first_img)
-    {
+    {// 第一帧数据处理
+      // 设置参考帧 setReferenceImage
       if(depthmap.setReferenceImage(img, T_world_curr.inv(), min_depth, max_depth))
       {
         first_img = false;
@@ -97,8 +102,9 @@ int main(int argc, char **argv)
       }
     }
     else
-    {
+    {// 正常处理流程
       double t = (double)cv::getTickCount();
+      // 更新当前地图
       depthmap.update(img, T_world_curr.inv());
       t = ((double)cv::getTickCount() - t)/cv::getTickFrequency();
       printf("\nUPDATE execution time: %f seconds.\n", t);

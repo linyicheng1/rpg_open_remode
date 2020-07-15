@@ -223,6 +223,12 @@ void rmd::DepthmapDenoiser::denoise(
   u_.getDevData(host_denoised);
 }
 
+/**
+ * @brief 根据min、max差值确定sigma值
+ * @param depth_range max-min
+ *        (6*sigma)^2 = depth_range^2 --->3sigma 99.7%
+ *        函数中约等于百分之99%落在区间内
+ * */
 void rmd::DepthmapDenoiser::setLargeSigmaSq(float depth_range)
 {
   host_ptr->large_sigma_sq =  depth_range * depth_range / 72.0f;

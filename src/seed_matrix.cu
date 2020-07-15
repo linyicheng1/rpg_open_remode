@@ -84,6 +84,14 @@ rmd::SeedMatrix::~SeedMatrix()
   delete img_reducer_;
 }
 
+/**
+ * @brief 初始化调用，设置参考图片
+ * @param host_ref_img_align_row_maj float格式的图像数据
+ * @param T_curr_world               当前帧到世界系的坐标变换关系
+ * @param min_depth                  最小深度
+ * @param max_depth                  最大深度
+ * 
+ * */
 bool rmd::SeedMatrix::setReferenceImage(
     float *host_ref_img_align_row_maj,
     const rmd::SE3<float> &T_curr_world,
@@ -117,6 +125,13 @@ bool rmd::SeedMatrix::setReferenceImage(
   return true;
 }
 
+
+/**
+ * @brief 正常流程下更新滤波器数据
+ * @param host_curr_img_align_row_maj float格式的图像数据
+ * @param T_curr_world                当前帧到世界系的坐标关系
+ * 
+ * */
 bool rmd::SeedMatrix::update(
     float *host_curr_img_align_row_maj,
     const SE3<float> &T_curr_world)
