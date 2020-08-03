@@ -23,7 +23,7 @@
 
 namespace rmd
 {
-
+// 针孔相机类
 struct PinholeCamera
 {
   __host__
@@ -37,6 +37,7 @@ struct PinholeCamera
     : fx(fx), fy(fy), cx(cx), cy(cy)
   { }
 
+  // 相机坐标系到世界坐标系
   __host__ __device__ __forceinline__
   float3 cam2world(const float2 & uv) const
   {
@@ -45,6 +46,7 @@ struct PinholeCamera
                        1.0f);
   }
 
+  // 世界坐标系到相机坐标系
   __host__ __device__ __forceinline__
   float2 world2cam(const float3 & xyz) const
   {
@@ -52,12 +54,13 @@ struct PinholeCamera
                        fy*xyz.y / xyz.z + cy);
   }
 
+  // 一个像素带来的角度偏差
   __host__ __device__ __forceinline__
   float getOnePixAngle() const
   {
     return atan2f(1.0f, 2.0f*fx)*2.0f;
   }
-
+  // 
   float fx, fy;
   float cx, cy;
 };

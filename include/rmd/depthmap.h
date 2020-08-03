@@ -31,6 +31,7 @@
 namespace rmd
 {
 
+// 深度地图类
 class Depthmap
 {
 public:

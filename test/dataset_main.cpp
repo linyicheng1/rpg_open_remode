@@ -35,7 +35,7 @@ int main(int argc, char **argv)
   // 当前是否存在gpu
   if(!rmd::checkCudaDevice(argc, argv))
     return EXIT_FAILURE;
-  // 创建针孔相机模型
+  // 创建针孔相机模型 fx, fy, cx, cy
   rmd::PinholeCamera cam(481.2f, -480.0f, 319.5f, 239.5f);
   // 前200帧数据
   rmd::test::Dataset dataset("first_200_frames_traj_over_table_input_sequence.txt");
@@ -54,6 +54,7 @@ int main(int argc, char **argv)
   const size_t height = 480;
 
   bool first_img = true;
+  // 深度地图
   rmd::Depthmap depthmap(width, height, cam.fx, cam.cx, cam.fy, cam.cy);
 
   // store the timings

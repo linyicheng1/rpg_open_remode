@@ -20,13 +20,17 @@
 #include <rmd/check_cuda_device.cuh>
 
 /// Run all the tests that were declared with TEST()
+// main 函数入口
 int main(int argc, char **argv)
 {
+  // 确保cuda驱动、设备存在
   if(rmd::checkCudaDevice(argc, argv))
   {
+    // 初始化
     testing::InitGoogleTest(&argc, argv);
+    // 
     int ret = RUN_ALL_TESTS();
-
+    // 重置cuda设备
     cudaDeviceReset();
 
     return ret;
