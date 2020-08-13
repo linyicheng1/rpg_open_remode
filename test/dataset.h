@@ -49,6 +49,7 @@ private:
   Eigen::Quaternionf quaternion_;
 };
 
+// 数据集类
 class Dataset
 {
 public:

@@ -17,6 +17,16 @@
 
 #include <rmd/depthmap.h>
 
+
+/**
+ * @brief 构造函数
+ * @param width  宽度
+ * @param height 高度
+ * @param fx     针孔相机内参
+ * @param cx
+ * @param fy
+ * @param cy
+ * */
 rmd::Depthmap::Depthmap(size_t width,
                         size_t height,
                         float fx,
@@ -32,9 +42,11 @@ rmd::Depthmap::Depthmap(size_t width,
   , cx_(cx)
   , cy_(cy)
 {
+  // opencv格式的内参矩阵
   cv_K_ = (cv::Mat_<float>(3, 3) << fx, 0.0f, cx, 0.0f, fy, cy, 0.0f, 0.0f, 1.0f);
+  // 构造 DepthmapDenoiser 类，去除深度地图的噪声类 
   denoiser_.reset(new rmd::DepthmapDenoiser(width_, height_));
-
+  // 新建Mat文件
   output_depth_32fc1_ = cv::Mat_<float>(height_, width_);
   output_convergence_int_ = cv::Mat_<int>(height_, width_);
   img_undistorted_32fc1_.create(height_, width_, CV_32FC1);
@@ -42,13 +54,24 @@ rmd::Depthmap::Depthmap(size_t width,
   ref_img_undistorted_8uc1_.create(height_, width_, CV_8UC1);
 }
 
+/**
+ * @brief 初始化无畸变的地图
+ * @param k1 畸变参数
+ * @param k2
+ * @param r1
+ * @param r2
+ * */
 void rmd::Depthmap::initUndistortionMap(
     float k1,
     float k2,
     float r1,
     float r2)
 {
+  // 畸变参数矩阵
   cv_D_ = (cv::Mat_<float>(1, 4) << k1, k2, r1, r2);
+  // 去除畸变
+  // cv_K_ cv格式内参矩阵
+  // cv_D_ cv格式畸变参数
   cv::initUndistortRectifyMap(
         cv_K_,
         cv_D_,

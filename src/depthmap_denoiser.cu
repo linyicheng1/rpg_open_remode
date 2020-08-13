@@ -25,14 +25,14 @@ namespace rmd
 
 namespace denoise
 {
-
+// 取最大值
 template<typename T>
 inline __device__
 T max(T a, T b)
 {
   return a > b ? a : b;
 }
-
+// 取最小值
 template<typename T>
 inline __device__
 T min(T a, T b)
@@ -176,6 +176,13 @@ rmd::DepthmapDenoiser::~DepthmapDenoiser()
     throw CudaException("DeviceData, unable to free device memory.", err);
 }
 
+/**
+ * @brief 去除噪声
+ * @param mu        
+ * @param sigma_sq  
+ * @param a         
+ * @param b        
+ * */
 void rmd::DepthmapDenoiser::denoise(
     const rmd::DeviceImage<float> &mu,
     const rmd::DeviceImage<float> &sigma_sq,

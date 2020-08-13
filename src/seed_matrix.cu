@@ -25,6 +25,12 @@
 #include "epipolar_match.cu"
 #include "seed_update.cu"
 
+/**
+ * @brief 构造函数
+ * @param width  宽度
+ * @param height 高度
+ * @param cam    针孔相机内参
+ * */
 rmd::SeedMatrix::SeedMatrix(
     const size_t &width,
     const size_t &height,
@@ -167,13 +173,13 @@ bool rmd::SeedMatrix::update(
   // Establish epipolar correspondences
   // call epipolar matching kernel
   rmd::copyImgSzToConst(&host_img_size_);
-
+  // 极线搜索
   rmd::seedEpipolarMatchKernel<<<dim_grid_, dim_block_>>>(dev_data_.dev_ptr, T_curr_ref);
   err = cudaDeviceSynchronize();
   if(cudaSuccess != err)
     throw CudaException("SeedMatrix: unable to synchronize device", err);
   rmd::bindTexture(epipolar_matches_tex, epipolar_matches_);
-
+  // 种子概率更新
   rmd::seedUpdateKernel<<<dim_grid_, dim_block_>>>(dev_data_.dev_ptr, T_curr_ref.inv());
 
   return true;

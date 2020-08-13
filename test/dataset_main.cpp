@@ -39,11 +39,13 @@ int main(int argc, char **argv)
   rmd::PinholeCamera cam(481.2f, -480.0f, 319.5f, 239.5f);
   // 前200帧数据
   rmd::test::Dataset dataset("first_200_frames_traj_over_table_input_sequence.txt");
+  // 从环境变量中读取文件路径信息
   if(!dataset.loadPathFromEnv())
   {
     std::cerr << "ERROR: could not retrieve dataset path from the environment variable '"
               << rmd::test::Dataset::getDataPathEnvVar() <<"'" << std::endl;
   }
+  // 读取序列中前200张图片
   if (!dataset.readDataSequence(0, 200))
   {
     std::cerr << "ERROR: could not read dataset" << std::endl;
@@ -54,7 +56,7 @@ int main(int argc, char **argv)
   const size_t height = 480;
 
   bool first_img = true;
-  // 深度地图
+  // 创建深度地图
   rmd::Depthmap depthmap(width, height, cam.fx, cam.cx, cam.fy, cam.cy);
 
   // store the timings

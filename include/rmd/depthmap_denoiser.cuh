@@ -24,6 +24,7 @@
 namespace rmd
 {
 
+// 去除深度地图噪声的类
 class DepthmapDenoiser
 {
 public:

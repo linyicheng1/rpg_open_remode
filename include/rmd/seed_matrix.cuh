@@ -41,7 +41,7 @@ enum ConvergenceState
 };
 }
 typedef ConvergenceStates::ConvergenceState ConvergenceState;
-
+// 深度滤波器的种子
 class SeedMatrix
 {
 public:
